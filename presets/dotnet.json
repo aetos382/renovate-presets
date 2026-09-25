@@ -1,0 +1,42 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Configuration for .NET repositories",
+  "extends": ["group:dotNetCore"],
+  "packageRules": [
+    {
+      "matchDatasources": ["nuget"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "description": "Auto-merge NuGet minor/patch (safety is gated by CI)"
+    },
+    {
+      "matchDepNames": [
+        "Microsoft.NETFramework.ReferenceAssemblies",
+        "System.Memory",
+        "System.Threading.Tasks.Extensions"
+      ],
+      "abandonmentThreshold": null,
+      "description": "Suppress abandonment alert - finished legacy package, not truly abandoned"
+    },
+    {
+      "matchDepNames": ["dotnet-sdk"],
+      "groupName": ".NET SDK version",
+      "description": "Keep global.json and the version of the dotnet devcontainer feature in sync"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "jsonata",
+      "fileFormat": "json",
+      "managerFilePatterns": [
+        "/^\\.devcontainer/devcontainer\\.json$/",
+        "/^\\.devcontainer\\.json$/",
+        "/^\\.devcontainer/[^/]+/devcontainer\\.json$/"
+      ],
+      "matchStrings": [
+        "$each(features, function($v, $k) { $substringBefore($k, ':') = 'ghcr.io/devcontainers/features/dotnet' and $type($v.version) = 'string' and $contains($v.version, /^\\d+\\.\\d+\\.\\d+/) ? {'depName': 'dotnet-sdk', 'currentValue': $v.version, 'datasource': 'dotnet-version'} })"
+      ],
+      "description": "SDK version of the dotnet devcontainer feature, synced with global.json via groupName. Matches any major version of the feature"
+    }
+  ]
+}

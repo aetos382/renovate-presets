@@ -1,0 +1,29 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Configuration for repositories with a dev container. Use with Dependabot for devcontainer features",
+  "packageRules": [
+    {
+      "matchManagers": ["devcontainer"],
+      "matchDepTypes": ["feature"],
+      "enabled": false,
+      "description": "Dependabot updates devcontainer features, because Renovate does not update devcontainer-lock.json (renovatebot/renovate#43169)"
+    },
+    {
+      "matchDepNames": ["koalaman/shellcheck"],
+      "prBodyNotes": [
+        "Renovate does not update the `SHA256` values in `.devcontainer/install-shellcheck.sh`. Update them manually before merging."
+      ],
+      "description": "ShellCheck checksums must be updated by hand"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^\\.devcontainer/.+\\.sh$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-.]+?) depName=(?<depName>[^\\s]+?)(?: (?:lookupName|packageName)=(?<packageName>[^\\s]+?))?(?: versioning=(?<versioning>[^\\s]+?))?(?: extractVersion=(?<extractVersion>[^\\s]+?))?\\s+[A-Z0-9_]+_VERSION='(?<currentValue>[^']+)'"
+      ],
+      "description": "Versions in dev container shell scripts, marked with a `# renovate:` comment"
+    }
+  ]
+}
