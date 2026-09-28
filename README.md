@@ -26,6 +26,19 @@ preset はこのリポジトリのデフォルト ブランチから読み込ま
 
 すべてのリポジトリで使う基本の設定。
 
+Dockerfile の `ENV` / `ARG` で宣言した `XXX_VERSION` と、GitHub Actions のワークフローや `action.yml` の `XXX_VERSION: ...` というキーは、直前の行に `# renovate:` コメントを書くと Renovate が更新する（Renovate 組み込みの `customManagers:dockerfileVersions` と `customManagers:githubActionsVersions`）。コメントには `datasource` と `depName` に続けて、必要に応じて `packageName`、`versioning`、`extractVersion`、`registryUrl` をこの順で書ける。
+
+```dockerfile
+# renovate: datasource=github-releases depName=koalaman/shellcheck
+ARG SHELLCHECK_VERSION=v0.11.0
+```
+
+```yaml
+env:
+  # renovate: datasource=npm depName=renovate
+  RENOVATE_VERSION: 44.115.3
+```
+
 ### `github>aetos382/renovate-presets//presets/devcontainer`（[presets/devcontainer.json](presets/devcontainer.json)）
 
 dev container を持つリポジトリで使う設定。
