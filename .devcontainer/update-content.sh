@@ -13,3 +13,8 @@ bash "$(dirname "$0")/install-shellcheck.sh"
 
 npm install -g "renovate@${RENOVATE_VERSION}"
 renovate --version
+# pre-commit hook が使うのは renovate-config-validator なので、それが見つかることも作成時に確かめる。
+if ! command -v renovate-config-validator >/dev/null 2>&1; then
+  echo "update-content: renovate-config-validator not found after installing renovate@${RENOVATE_VERSION}." >&2
+  exit 1
+fi
