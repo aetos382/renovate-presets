@@ -6,8 +6,8 @@
 # prebuild にこの結果を含めるため。
 set -euo pipefail
 
-# renovate: datasource=npm depName=renovate
-RENOVATE_VERSION='44.115.3'
+# shellcheck source=versions.sh
+source "$(dirname "$0")/versions.sh"
 
 bash "$(dirname "$0")/install-shellcheck.sh"
 

@@ -30,9 +30,15 @@ if command -v renovate-config-validator >/dev/null 2>&1; then
 elif [ "${RENOVATE_CONFIG_VALIDATOR_REQUIRED:-}" = 'true' ]; then
   echo 'validate-renovate-config: renovate-config-validator not found. Run .devcontainer/update-content.sh.' >&2
   exit 1
+elif ! command -v npx >/dev/null 2>&1; then
+  echo 'validate-renovate-config: neither renovate-config-validator nor npx found. Install Node.js or Renovate.' >&2
+  exit 1
 else
-  echo 'validate-renovate-config: renovate-config-validator not found; falling back to npx.' >&2
-  validator=(npx --yes --package renovate -- renovate-config-validator)
+  # devcontainer と同じバージョンで検証する。hook はリポジトリのルートで実行される。
+  # shellcheck source=../.devcontainer/versions.sh
+  source .devcontainer/versions.sh
+  echo "validate-renovate-config: renovate-config-validator not found; falling back to npx (renovate@${RENOVATE_VERSION})." >&2
+  validator=(npx --yes --package "renovate@${RENOVATE_VERSION}" -- renovate-config-validator)
 fi
 
 # ファイル名を渡すと既定では global config として検証されるので、--no-global を付けて
