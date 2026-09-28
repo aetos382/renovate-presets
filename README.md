@@ -20,37 +20,17 @@ preset はこのリポジトリのデフォルト ブランチから読み込ま
 
 ## preset
 
+各 preset の設定内容は、JSON ファイルの `description` を参照。
+
 ### `github>aetos382/renovate-presets//presets/default`（[presets/default.json](presets/default.json)）
 
 すべてのリポジトリで使う基本の設定。
-
-- `config:best-practices`、`helpers:pinGitHubActionDigestsToSemver`、`security:openssf-scorecard` を継承する。
-- タイムゾーンは `Asia/Tokyo`。リリースから 3 日経つまで更新しない（`minimumReleaseAge`）。
-- PR に `dependencies` ラベルを付ける。脆弱性の修正には `security` ラベルも付け、`minimumReleaseAge` を待たずに automerge する。
-- OSV の脆弱性情報を使い、Dependency Dashboard に一覧を表示する。
-- 次の更新を automerge する。
-  - 信頼できる GitHub Actions（`actions/`、`github/`、`microsoft/`、`advanced-security/`）の major 以外の更新
-  - npm の `devDependencies` の minor/patch
-  - pin と digest の pin（`minimumReleaseAge` を待たない）
-- rollback と replacement は automerge せず、コミット メッセージに `[cautionable]` を付ける。
-- major は automerge しない。
 
 ### `github>aetos382/renovate-presets//presets/devcontainer`（[presets/devcontainer.json](presets/devcontainer.json)）
 
 dev container を持つリポジトリで使う設定。
 
-- devcontainer の features の更新を無効にする。Renovate は `devcontainer-lock.json` を更新できないため（[renovatebot/renovate#43169](https://github.com/renovatebot/renovate/issues/43169)）、features は Dependabot で更新する（後述）。
-- `.devcontainer/*.sh` の中の、`# renovate:` コメントの直後にある `XXX_VERSION='...'` を更新する。
-
-  ```bash
-  # renovate: datasource=github-releases depName=koalaman/shellcheck
-  SHELLCHECK_VERSION='v0.11.0'
-  ```
-
-  コメントには `datasource` と `depName` に続けて、必要に応じて `packageName`、`versioning`、`extractVersion` をこの順で書ける。
-- ShellCheck の更新 PR に、`.devcontainer/install-shellcheck.sh` の `SHA256` を手で更新するよう注記を付ける。
-
-この preset を使うリポジトリには、features を更新するための `.github/dependabot.yml` を置く。
+Renovate は `devcontainer-lock.json` を更新できない（[renovatebot/renovate#43169](https://github.com/renovatebot/renovate/issues/43169)）ので、この preset では devcontainer の features の更新を無効にしている。この preset を使うリポジトリには、features を更新するための `.github/dependabot.yml` を置く。
 
 ```yaml
 # 依存関係の更新は基本的に Renovate（renovate.json）で行う。
@@ -66,14 +46,18 @@ updates:
       default-days: 3
 ```
 
+`.devcontainer/*.sh` に書いたツールのバージョンを Renovate に更新させるには、`XXX_VERSION='...'` の直前の行に `# renovate:` コメントを書く。コメントには `datasource` と `depName` に続けて、必要に応じて `packageName`、`versioning`、`extractVersion` をこの順で書ける。
+
+```bash
+# renovate: datasource=github-releases depName=koalaman/shellcheck
+SHELLCHECK_VERSION='v0.11.0'
+```
+
 ### `github>aetos382/renovate-presets//presets/dotnet`（[presets/dotnet.json](presets/dotnet.json)）
 
 .NET のリポジトリで使う設定。
 
-- NuGet パッケージの minor/patch を automerge する。`global.json` の `msbuild-sdks` や `dotnet-tools.json` のツールも対象になる。
-- 開発が完了しているだけで放棄されてはいないパッケージ（`Microsoft.NETFramework.ReferenceAssemblies`、`System.Memory`、`System.Threading.Tasks.Extensions`）について、abandonment の警告を出さない。
-- `global.json` の SDK のバージョンと、devcontainer の dotnet feature（`ghcr.io/devcontainers/features/dotnet`）の `version` を 1 つの PR でそろえて更新する。feature の major バージョンは問わない。`version` が `lts` のようにバージョン番号でない場合は対象外になる。
-- `mcr.microsoft.com/dotnet/**` の Docker イメージの更新を 1 つの PR にまとめる（`group:dotNetCore`）。
+`global.json` の SDK のバージョンと devcontainer の dotnet feature の `version` をそろえて更新する。ただし `version` が `10.0.100` のように 3 つの部分からなるバージョン番号でない場合（`lts` や `10.0` など）は対象外になる。
 
 ## リポジトリ固有のルールを足すときの注意
 
@@ -93,3 +77,15 @@ Renovate は、preset の `packageRules` の後にリポジトリ側の `package
 
 - Renovate の GitHub App をリポジトリにインストールする。
 - Dependabot alerts を有効にする。
+
+## このリポジトリの開発
+
+コミット時に動く pre-commit フック（main への直接コミットの防止と、Renovate の設定の検証）は、Git 2.54 で導入された Config-based hooks として `.gitconfig` に定義している。devcontainer では `.devcontainer/on-create.sh` が `.git/config` に `include.path=../.gitconfig` を追加し、フックが有効になったことを確かめる。devcontainer の外では `git config set --append --local include.path ../.gitconfig` を手で実行する。
+
+フックには次の制約があり、いずれの場合も警告は出ない。
+
+- Git 2.54 未満の Git では、フックの定義が無視される。
+- `include.path` の参照先がない場合、Git はそれを無視する。そのため `.gitconfig` を含まないコミットをチェックアウトしている間は、フックが動かない。
+- `.git/config` は worktree 間で共有されるので、linked worktree でもメインの worktree の `.gitconfig` が使われる。
+
+フックが有効かどうかは `git hook list pre-commit` で確かめられる。

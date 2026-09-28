@@ -3,10 +3,16 @@
 # renovate-config-validator で検証する。
 set -euo pipefail
 
-mapfile -t files < <(git diff --cached --name-only --diff-filter=ACMR -- renovate.json ':(glob)presets/**/*.json')
-if [ "${#files[@]}" -eq 0 ]; then
+# プロセス置換（< <(...)）では git diff の失敗が set -e にも pipefail にも拾われず、
+# 対象なしとして検証を飛ばしてしまうので、いったん変数に受けて終了コードを確かめる。
+if ! staged="$(git diff --cached --name-only --diff-filter=ACMR -- renovate.json ':(glob)presets/**/*.json')"; then
+  echo 'validate-renovate-config: failed to list staged files.' >&2
+  exit 1
+fi
+if [ -z "$staged" ]; then
   exit 0
 fi
+mapfile -t files <<<"$staged"
 
 # 作業ツリーではなくステージされた内容を検証する。
 tmp_dir="$(mktemp -d)"
@@ -17,9 +23,15 @@ for file in "${files[@]}"; do
 done
 
 # devcontainer では update-content.sh でグローバルに入れてある。ない環境では npx で取得する。
+# devcontainer（containerEnv で RENOVATE_CONFIG_VALIDATOR_REQUIRED=true）で見つからないのは
+# update-content.sh が失敗したか実行されていないということなので、npx で取得せずに失敗させる。
 if command -v renovate-config-validator >/dev/null 2>&1; then
   validator=(renovate-config-validator)
+elif [ "${RENOVATE_CONFIG_VALIDATOR_REQUIRED:-}" = 'true' ]; then
+  echo 'validate-renovate-config: renovate-config-validator not found. Run .devcontainer/update-content.sh.' >&2
+  exit 1
 else
+  echo 'validate-renovate-config: renovate-config-validator not found; falling back to npx.' >&2
   validator=(npx --yes --package renovate -- renovate-config-validator)
 fi
 
