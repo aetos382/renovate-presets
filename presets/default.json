@@ -1,0 +1,63 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": [
+    "Base configuration shared by aetos382's repositories",
+    "Updates wait 3 days after release (minimumReleaseAge), except pins and vulnerability fixes",
+    "Vulnerability fixes are labeled `security` and follow the same automerge rules as other updates"
+  ],
+  "configMigration": true,
+  "labels": ["dependencies"],
+  "extends": [
+    "config:best-practices",
+    "helpers:pinGitHubActionDigestsToSemver",
+    "security:openssf-scorecard"
+  ],
+  "timezone": "Asia/Tokyo",
+  "minimumReleaseAge": "3 days",
+  "osvVulnerabilityAlerts": true,
+  "dependencyDashboardOSVVulnerabilitySummary": "all",
+  "packageRules": [
+    {
+      "matchDatasources": ["github-tags"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "pinDigest", "digest"],
+      "automerge": true,
+      "description": "Auto-merge minor/patch/pin/digest updates for trusted GitHub Actions",
+      "matchDepNames": [
+        "/^actions//",
+        "/^github//",
+        "/^microsoft//",
+        "/^advanced-security//"
+      ]
+    },
+    {
+      "matchDatasources": ["npm"],
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "description": "Auto-merge dev-only npm minor/patch"
+    },
+    {
+      "matchUpdateTypes": ["pin", "pinDigest"],
+      "minimumReleaseAge": null,
+      "automerge": true,
+      "description": "Allow automerge pin updates"
+    },
+    {
+      "matchUpdateTypes": ["rollback", "replacement"],
+      "minimumReleaseAge": null,
+      "automerge": false,
+      "commitMessagePrefix": "[cautionable]",
+      "description": "Report cautionable updates"
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "description": "Don't automerge major updates. Rules in repositories come after this, so they must not enable automerge without matchUpdateTypes"
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "minimumReleaseAge": null,
+    "addLabels": ["security"]
+  }
+}

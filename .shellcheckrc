@@ -1,0 +1,4 @@
+# source で読み込むファイル（.devcontainer/versions.sh）を、入力に指定していなくてもたどる。
+# source ディレクティブのパスは、shellcheck を実行したディレクトリではなくスクリプトの場所から解決する。
+external-sources=true
+source-path=SCRIPTDIR
