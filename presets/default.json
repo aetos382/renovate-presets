@@ -19,6 +19,7 @@
   "packageRules": [
     {
       "matchDatasources": ["github-tags"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "pinDigest", "digest"],
       "automerge": true,
       "description": "Auto-merge minor/patch/pin/digest updates for trusted GitHub Actions",
       "matchDepNames": [

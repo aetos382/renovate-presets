@@ -74,10 +74,13 @@ Renovate は、preset の `packageRules` の後にリポジトリ側の `package
 
 コミット時に動く pre-commit フック（main への直接コミットの防止と、Renovate の設定の検証）は、Git 2.54 で導入された Config-based hooks として `.gitconfig` に定義している。devcontainer では `.devcontainer/on-create.sh` が `.git/config` に `include.path=../.gitconfig` を追加し、フックが有効になったことを確かめる。devcontainer の外では `git config set --append --local include.path ../.gitconfig` を手で実行する。
 
-フックには次の制約があり、いずれの場合も警告は出ない。
+次の場合にはフックが動かない。コミット時に警告は出ない（devcontainer では、1 つめは `on-create.sh` が作成時に検出する）。
 
 - Git 2.54 未満の Git では、フックの定義が無視される。
 - `include.path` の参照先がない場合、Git はそれを無視する。そのため `.gitconfig` を含まないコミットをチェックアウトしている間は、フックが動かない。
-- `.git/config` は worktree 間で共有されるので、linked worktree でもメインの worktree の `.gitconfig` が使われる。
 
 フックが有効かどうかは `git hook list pre-commit` で確かめられる。
+
+### linked worktree での注意
+
+`.git/config` は worktree 間で共有されるので、フックの定義は linked worktree でもメインの worktree の `.gitconfig` から読まれる。一方、フックが実行するスクリプト（`.githooks/*.sh`）は、コミットする worktree のものが使われる。そのため、`.githooks` を含まないコミットを linked worktree でチェックアウトしていると、フックはスクリプトが見つからずに失敗し、コミットできない。
