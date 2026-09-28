@@ -16,6 +16,15 @@ if ! git config get --local --all --fixed-value --value='../.gitconfig' 'include
 fi
 
 # Git 2.54 未満では hook.<name>.* が黙って無視され、hook が動かないままコミットできてしまう。
+# git hook list はイベントに hook が 1 つもないときにも失敗するので、その失敗と区別できるよう
+# バージョンは先に確かめる。
+git_version="$(git version)"
+IFS=. read -r git_major git_minor _ <<<"${git_version#git version }"
+if (( git_major < 2 || (git_major == 2 && git_minor < 54) )); then
+  echo "on-create: Config-based hooks require Git 2.54 or later (${git_version})." >&2
+  exit 1
+fi
+
 # .gitconfig に定義した hook がすべて git hook list に出てくることを確かめる。
 mapfile -t hook_events < <(git config list --file .gitconfig | sed -n 's/^hook\.\(.*\)\.event=\(.*\)$/\1 \2/p')
 if [ "${#hook_events[@]}" -eq 0 ]; then
@@ -26,7 +35,7 @@ for hook_event in "${hook_events[@]}"; do
   name="${hook_event% *}"
   event="${hook_event##* }"
   if ! registered="$(git hook list "$event")"; then
-    echo "on-create: 'git hook list $event' failed. Config-based hooks require Git 2.54 or later ($(git --version))." >&2
+    echo "on-create: no hooks are registered for '$event'. Check that include.path in .git/config points to ../.gitconfig." >&2
     exit 1
   fi
   if ! grep -qxF "$name" <<<"$registered"; then

@@ -34,7 +34,7 @@
         "/^\\.devcontainer/[^/]+/devcontainer\\.json$/"
       ],
       "matchStrings": [
-        "$each(features, function($v, $k) { $substringBefore($k, ':') = 'ghcr.io/devcontainers/features/dotnet' and $type($v.version) = 'string' and $contains($v.version, /^\\d+\\.\\d+\\.\\d+/) ? {'depName': 'dotnet-sdk', 'currentValue': $v.version, 'datasource': 'dotnet-version'} })"
+        "$each(features, function($v, $k) { $substringBefore($k, ':') = 'ghcr.io/devcontainers/features/dotnet' and $type($v.version) = 'string' and $contains($v.version, /^\\d+\\.\\d+\\.\\d+$/) ? {'depName': 'dotnet-sdk', 'currentValue': $v.version, 'datasource': 'dotnet-version'} })"
       ],
       "description": "SDK version of the dotnet devcontainer feature, synced with global.json via groupName. Matches any major version of the feature"
     }

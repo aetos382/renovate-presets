@@ -3,5 +3,14 @@
   "extends": [
     "github>aetos382/renovate-presets//presets/default",
     "github>aetos382/renovate-presets//presets/devcontainer"
+  ],
+  "packageRules": [
+    {
+      "matchDepNames": ["koalaman/shellcheck"],
+      "prBodyNotes": [
+        "Renovate does not update the `SHA256` values in `.devcontainer/install-shellcheck.sh`. Update them manually before merging."
+      ],
+      "description": "ShellCheck checksums must be updated by hand"
+    }
   ]
 }

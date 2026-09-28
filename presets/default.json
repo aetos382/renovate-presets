@@ -52,7 +52,6 @@
   ],
   "vulnerabilityAlerts": {
     "enabled": true,
-    "automerge": true,
     "minimumReleaseAge": null,
     "addLabels": ["security"]
   }

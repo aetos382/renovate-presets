@@ -7,13 +7,6 @@
       "matchDepTypes": ["feature"],
       "enabled": false,
       "description": "Dependabot updates devcontainer features, because Renovate does not update devcontainer-lock.json (renovatebot/renovate#43169)"
-    },
-    {
-      "matchDepNames": ["koalaman/shellcheck"],
-      "prBodyNotes": [
-        "Renovate does not update the `SHA256` values in `.devcontainer/install-shellcheck.sh`. Update them manually before merging."
-      ],
-      "description": "ShellCheck checksums must be updated by hand"
     }
   ],
   "customManagers": [

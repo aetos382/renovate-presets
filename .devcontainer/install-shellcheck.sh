@@ -3,7 +3,7 @@
 # ベースイメージには curl と tar (xz 対応) が入っているため、apt-get の実行は不要。
 set -euo pipefail
 
-# バージョンは Renovate が更新する（renovate.json の customManagers）。
+# バージョンは Renovate が更新する（presets/devcontainer.json の customManagers）。
 # SHA256 は Renovate では更新されないので、Renovate の PR で手で書き換える。
 # renovate: datasource=github-releases depName=koalaman/shellcheck
 SHELLCHECK_VERSION='v0.11.0'
