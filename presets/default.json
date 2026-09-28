@@ -1,6 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Base configuration shared by aetos382's repositories",
+  "description": [
+    "Base configuration shared by aetos382's repositories",
+    "Updates wait 3 days after release (minimumReleaseAge), except pins and vulnerability fixes",
+    "Vulnerability fixes are labeled `security` and follow the same automerge rules as other updates"
+  ],
   "configMigration": true,
   "labels": ["dependencies"],
   "extends": [

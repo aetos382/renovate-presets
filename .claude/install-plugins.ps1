@@ -12,9 +12,9 @@ $ErrorActionPreference = 'Stop'
 # settings.json の extraKnownMarketplaces に書いた source から、
 # claude plugin marketplace add に渡す source と scope を組み立てる。
 #
-# StrictMode 下では未定義のキーを読んだ時点で落ちるが、そのメッセージにはどの marketplace が
-# 悪いのかが出ない。settings.json の書き間違いを直せるようにするため、必要なキーは
-# ContainsKey で確かめて、名前を添えて投げる。
+# StrictMode 下では未定義のキーをプロパティとして読んだ時点で失敗するが、そのメッセージには
+# どの marketplace が悪いのかが出ない。settings.json の書き間違いを直せるようにするため、
+# キーはインデックスで読み（未定義なら $null になる）、必要なキーがなければ名前を添えて例外を投げる。
 function Get-MarketplaceSource {
     param (
         [Parameter(Mandatory)]
@@ -24,36 +24,36 @@ function Get-MarketplaceSource {
         $Source
     )
 
-    if (-not $Source.ContainsKey('source')) {
+    if (-not $Source['source']) {
         throw "Marketplace has no source type: $Name"
     }
 
-    switch ($Source.source) {
+    switch ($Source['source']) {
         'github' {
-            if (-not $Source.ContainsKey('repo')) {
+            if (-not $Source['repo']) {
                 throw "Marketplace has no repo: $Name"
             }
 
-            return @{ Scope = 'project'; Source = $Source.repo }
+            return @{ Scope = 'project'; Source = $Source['repo'] }
         }
 
         'git' {
-            if (-not $Source.ContainsKey('url')) {
+            if (-not $Source['url']) {
                 throw "Marketplace has no url: $Name"
             }
 
             # ブランチやタグを指す marketplace は、URL の末尾に #<ref> を付けて渡す。
             # Claude Code はこれを source: git の url と ref に分けて記録するので、
             # settings.json には分かれた形で書き、ここで元の形に戻す。
-            if ($Source.ContainsKey('ref')) {
-                return @{ Scope = 'project'; Source = "$($Source.url)#$($Source.ref)" }
+            if ($Source['ref']) {
+                return @{ Scope = 'project'; Source = "$($Source['url'])#$($Source['ref'])" }
             }
 
-            return @{ Scope = 'project'; Source = $Source.url }
+            return @{ Scope = 'project'; Source = $Source['url'] }
         }
 
         'directory' {
-            if (-not $Source.ContainsKey('path')) {
+            if (-not $Source['path']) {
                 throw "Marketplace has no path: $Name"
             }
 
@@ -62,12 +62,12 @@ function Get-MarketplaceSource {
             # 追加すると settings.json の相対パスがこの環境の絶対パスで上書きされてしまう。
             # そこで、git 管理外の settings.local.json に書き込む local スコープで追加する。
             # 相対パスは、リポジトリのルートに移動した後で解決する。
-            return @{ Scope = 'local'; Source = (Resolve-Path -LiteralPath $Source.path).ProviderPath }
+            return @{ Scope = 'local'; Source = (Resolve-Path -LiteralPath $Source['path']).ProviderPath }
         }
 
         default {
             # 扱えない source を黙って飛ばすと、plugin のインストールが理由の分からない失敗になる。
-            throw "Unsupported marketplace source: $Name ($($Source.source))"
+            throw "Unsupported marketplace source: $Name ($($Source['source']))"
         }
     }
 }
@@ -79,9 +79,9 @@ $settings = Get-Content -LiteralPath $settingsFile -Raw | ConvertFrom-Json -AsHa
 # どこから実行されてもリポジトリのルートで動かす。
 Push-Location (Split-Path -Parent $PSScriptRoot)
 try {
-    # 未定義のキーを参照すると StrictMode で失敗するので、ContainsKey で確かめてから読む。
-    $marketplaces = if ($settings.ContainsKey('extraKnownMarketplaces')) { $settings.extraKnownMarketplaces } else { @{} }
-    $plugins = if ($settings.ContainsKey('enabledPlugins')) { $settings.enabledPlugins } else { @{} }
+    # 未定義のキーをプロパティとして読むと StrictMode で失敗するので、インデックスで読む。
+    $marketplaces = $settings['extraKnownMarketplaces'] ?? @{}
+    $plugins = $settings['enabledPlugins'] ?? @{}
 
     # 途中まで追加してから失敗しないよう、実行前にすべての source を解決する。
     #
@@ -91,12 +91,12 @@ try {
     # settings.json に書くキーは manifest の name に合わせること。
     $sources = [ordered]@{}
     foreach ($name in $marketplaces.Keys) {
-        $marketplace = $marketplaces[$name]
-        if (-not $marketplace.ContainsKey('source')) {
+        $source = $marketplaces[$name]['source']
+        if (-not $source) {
             throw "Marketplace has no source: $name"
         }
 
-        $sources[$name] = Get-MarketplaceSource -Name $name -Source $marketplace.source
+        $sources[$name] = Get-MarketplaceSource -Name $name -Source $source
     }
 
     foreach ($name in $sources.Keys) {

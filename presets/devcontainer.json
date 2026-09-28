@@ -14,7 +14,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^\\.devcontainer/.+\\.sh$/"],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>[a-z-.]+?) depName=(?<depName>[^\\s]+?)(?: (?:lookupName|packageName)=(?<packageName>[^\\s]+?))?(?: versioning=(?<versioning>[^\\s]+?))?(?: extractVersion=(?<extractVersion>[^\\s]+?))?\\s+[A-Z0-9_]+_VERSION='(?<currentValue>[^']+)'"
+        "# renovate: datasource=(?<datasource>[a-z-.]+?) depName=(?<depName>[^\\s]+?)(?: packageName=(?<packageName>[^\\s]+?))?(?: versioning=(?<versioning>[^\\s]+?))?(?: extractVersion=(?<extractVersion>[^\\s]+?))?\\n[ \\t]*[A-Z0-9_]+_VERSION='(?<currentValue>[^']+)'"
       ],
       "description": "Versions in dev container shell scripts, marked with a `# renovate:` comment"
     }

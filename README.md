@@ -65,14 +65,6 @@ Renovate は、preset の `packageRules` の後にリポジトリ側の `package
 
 リポジトリ側で automerge を有効にするルールには、必ず `matchUpdateTypes` を指定する。preset 同士でも、`extends` で後に書いた preset のルールが後に並ぶので、このリポジトリの preset に automerge のルールを足すときも同じようにする。
 
-```json
-{
-  "matchDatasources": ["nuget"],
-  "matchUpdateTypes": ["minor", "patch"],
-  "automerge": true
-}
-```
-
 ## 導入時に必要な作業
 
 - Renovate の GitHub App をリポジトリにインストールする。

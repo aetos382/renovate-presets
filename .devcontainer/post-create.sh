@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# devcontainer / Codespaces の初期化。
+# devcontainer / Codespaces の初期化のうち、Claude Code の marketplace / plugin の導入。
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
