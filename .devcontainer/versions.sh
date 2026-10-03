@@ -3,4 +3,4 @@
 # shellcheck disable=SC2034
 
 # renovate: datasource=npm depName=renovate
-RENOVATE_VERSION='44.115.3'
+RENOVATE_VERSION='44.125.0'
