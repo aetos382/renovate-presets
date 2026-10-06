@@ -4,6 +4,7 @@
     "Base configuration shared by aetos382's repositories",
     "Updates wait 3 days after release (minimumReleaseAge), except pins and vulnerability fixes",
     "Vulnerability fixes are labeled `security` and follow the same automerge rules as other updates",
+    "Minor and patch updates of the Renovate CLI (npm package `renovate`) are automerged when its version is marked with a `# renovate:` comment",
     "`_VERSION` variables in Dockerfiles and GitHub Actions files are updated when marked with a `# renovate:` comment"
   ],
   "configMigration": true,
@@ -38,6 +39,14 @@
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": true,
       "description": "Auto-merge dev-only npm minor/patch"
+    },
+    {
+      "matchManagers": ["custom.regex"],
+      "matchDatasources": ["npm"],
+      "matchDepNames": ["renovate"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "description": "Auto-merge minor/patch updates of the Renovate CLI pinned with a `# renovate:` comment. It only validates the Renovate configuration"
     },
     {
       "matchUpdateTypes": ["pin", "pinDigest"],
