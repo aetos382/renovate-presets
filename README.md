@@ -39,6 +39,8 @@ env:
   RENOVATE_VERSION: 44.115.3
 ```
 
+Renovate の CLI（npm パッケージの `renovate`）のバージョンを `# renovate:` コメントで追従させている場合、その minor と patch の更新は automerge する。Renovate の設定の検証にしか使わず、更新の頻度が高いためである。`presets/devcontainer` の `.devcontainer/*.sh` に書いたバージョンにも効く。
+
 ### `github>aetos382/renovate-presets//presets/devcontainer`（[presets/devcontainer.json](presets/devcontainer.json)）
 
 dev container を持つリポジトリで使う設定。
