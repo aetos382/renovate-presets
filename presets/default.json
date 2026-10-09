@@ -4,6 +4,7 @@
     "Base configuration shared by aetos382's repositories",
     "Updates wait 3 days after release (minimumReleaseAge), except pins and vulnerability fixes",
     "Lock file maintenance runs weekly (from config:best-practices) and is not held back by the missing release timestamp",
+    "Digest updates are not held back by the missing release timestamp either",
     "Vulnerability fixes are labeled `security` and follow the same automerge rules as other updates",
     "Minor and patch updates of the Renovate CLI (npm package `renovate`) are automerged when its version is marked with a `# renovate:` comment",
     "`_VERSION` variables in Dockerfiles and GitHub Actions files are updated when marked with a `# renovate:` comment"
@@ -59,6 +60,11 @@
       "matchUpdateTypes": ["lockFileMaintenance"],
       "minimumReleaseAgeBehaviour": "timestamp-optional",
       "description": "Lock file maintenance has no release timestamp, so the `renovate/stability-days` check would stay pending forever. minimumReleaseAge is kept so that Renovate still passes `--before` to npm"
+    },
+    {
+      "matchUpdateTypes": ["digest"],
+      "minimumReleaseAgeBehaviour": "timestamp-optional",
+      "description": "A digest update carries no release timestamp into the branch stage, so the `renovate/stability-days` check would stay pending forever and block automerge (renovatebot/renovate#45236). minimumReleaseAge is kept so that the wait still applies wherever Renovate does have a timestamp"
     },
     {
       "matchUpdateTypes": ["rollback", "replacement"],
