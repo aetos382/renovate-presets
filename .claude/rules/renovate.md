@@ -18,4 +18,4 @@ paths:
   - このリポジトリの `.github/dependabot.yml` を削除し、この項目の Dependabot についての記述も削除する。
   - devcontainer preset を使う各リポジトリの `.github/dependabot.yml` を削除する。
 - `renovate.json` か `presets/` 以下の `*.json` をコミットすると、pre-commit フックがステージされた内容を `renovate-config-validator --strict --no-global` で検証する。手で実行するときは、リポジトリ直下で `CODESPACES=false renovate-config-validator --strict --no-global renovate.json presets/*.json < /dev/null` と実行する（`--no-global` がないと global config として検証される。Codespaces では `CODESPACES=false` がないとリポジトリ名の入力待ちで止まる）。
-- `.devcontainer/*.sh` のツールのバージョンは `# renovate: datasource=... depName=...` コメントの直後の `XXX_VERSION='...'` で Renovate に追従させる。ShellCheck の `SHA256` は Renovate が更新しないので、Renovate の PR で手で書き換える。
+- `.devcontainer/*.sh` のツールのバージョンは `# renovate: datasource=... depName=...` コメントの直後の `XXX_VERSION='...'` で Renovate に追従させる。
