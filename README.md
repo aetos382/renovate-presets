@@ -39,6 +39,16 @@ env:
   RENOVATE_VERSION: 44.115.3
 ```
 
+`renovate.json` の `constraints.ghActionsLock` に書いた [gh-actions-lock](https://github.com/github/gh-actions-lock) のバージョンも Renovate が更新する。これは Renovate が `.github/workflows/actions.lock` を作り直すときに使うバージョンである。同じ拡張機能のバージョンを `# renovate:` コメント付きで別の場所（`presets/devcontainer` の `.devcontainer/*.sh` など）にも書いている場合は、同じプル リクエストで一緒に更新される。
+
+```json
+{
+  "constraints": {
+    "ghActionsLock": "v0.1.6"
+  }
+}
+```
+
 Renovate の CLI（npm パッケージの `renovate`）のバージョンを `# renovate:` コメントで追従させている場合、その minor と patch の更新は automerge する。Renovate の設定の検証にしか使わず、更新の頻度が高いためである。`presets/devcontainer` の `.devcontainer/*.sh` に書いたバージョンにも効く。
 
 ### `github>aetos382/renovate-presets//presets/devcontainer`（[presets/devcontainer.json](presets/devcontainer.json)）
