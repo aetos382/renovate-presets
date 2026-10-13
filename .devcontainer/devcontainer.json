@@ -13,6 +13,7 @@
     "ghcr.io/aetos382/devcontainer-features/apt-mirror:1": {
       "mirror": "https://ftp.udx.icscoe.jp/Linux/ubuntu/"
     },
+    "ghcr.io/aetos382/devcontainer-features/shellcheck:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/node:2": {
       "nodeGypDependencies": false
@@ -38,12 +39,10 @@
         "EditorConfig.EditorConfig",
         "github.vscode-github-actions",
         "GitHub.vscode-pull-request-github",
-        "ms-vscode.powershell",
-        "timonwong.shellcheck"
+        "ms-vscode.powershell"
       ],
       "settings": {
-        "files.eol": "\n",
-        "shellcheck.executablePath": "/usr/local/bin/shellcheck"
+        "files.eol": "\n"
       }
     }
   }
