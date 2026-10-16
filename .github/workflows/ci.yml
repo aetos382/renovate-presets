@@ -16,8 +16,6 @@ jobs:
     uses: ./.github/workflows/renovate-config.yml
     with:
       files: renovate.json presets/*.json
-      # pre-commit hook と同じバージョンで検証する。
-      versions-file: .devcontainer/versions.sh
 
   # ワークフローと actions.lock のずれや、読めないロックファイルは、ワークフローを見ただけでは
   # 分からず、pre-commit hook は迂回できるので、ここで止める。

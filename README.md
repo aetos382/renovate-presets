@@ -98,9 +98,6 @@ Renovate は、preset の `packageRules` の後にリポジトリ側の `package
 jobs:
   renovate-config:
     uses: aetos382/renovate-presets/.github/workflows/renovate-config.yml@main
-    with:
-      # pre-commit hook と同じバージョンで検証したいときに渡す。
-      versions-file: .devcontainer/versions.sh
 ```
 
 - `files`: 検証するファイル。空白で区切り、glob も書ける。既定は `renovate.json`。一致するファイルが無いパターンは失敗になる。
