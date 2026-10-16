@@ -16,5 +16,5 @@ paths:
   - README.md の devcontainer preset の節から、Dependabot についての説明と `dependabot.yml` の例を削除する。
   - このリポジトリの `.github/dependabot.yml` を削除し、この項目の Dependabot についての記述も削除する。
   - devcontainer preset を使う各リポジトリの `.github/dependabot.yml` を削除する。
-- `renovate.json` と `presets/` 以下の `*.json` は、CI の `renovate-config` ジョブが `renovate-config-validator --strict --no-global` で検証する。手元では検証しない。`renovate.json` を大きく組み替えたときは、`renovate/reconfigure` ブランチに push すると、Mend の Renovate が次の実行でそのブランチの設定を検証し、ブランチのステータスと PR のコメントで結果を返す（[Config Validation](https://docs.renovatebot.com/config-validation/)）。preset は対象外で、毎回の手順にはしない。
+- `renovate.json` と `presets/` 以下の `*.json` は、CI の `renovate-config` ジョブが `renovate-config-validator --strict --no-global` で検証する。手元では検証しない。`renovate.json` を大きく組み替えたときは、`renovate/reconfigure` ブランチに push すると、Mend の Renovate が次の実行でそのブランチの設定を検証し、結果をブランチのステータスで返す。そのブランチから PR を開いていれば、エラーの内容を PR にもコメントする（[Config Validation](https://docs.renovatebot.com/config-validation/)）。preset は対象外で、毎回の手順にはしない。
 - `.devcontainer/*.sh` のツールのバージョンは `# renovate: datasource=... depName=...` コメントの直後の `XXX_VERSION='...'` で Renovate に追従させる。
