@@ -1,8 +1,8 @@
 name: Renovate config
 
 # 呼び出し元のリポジトリの Renovate の設定を renovate-config-validator で検証する再利用可能ワークフロー。
-# 設定の誤りは、マージした後に Renovate が設定を読めずに止まるまで気付きにくい。pre-commit hook は
-# --no-verify や GitHub の Web 上での編集で迂回されるので、マージの前にここで止める。
+# 設定の誤りは、マージした後に Renovate が設定を読めずに止まるまで気付きにくいので、マージの前に
+# ここで止める。
 #
 # 呼び出し元は @main で参照する。preset と同じく、既定のブランチの変更が全リポジトリに即座に効く。
 # gh-actions-lock は job の uses（再利用可能ワークフローの呼び出し）を固定しない（v0.2.0 で確認）ので、
@@ -17,13 +17,6 @@ on:
           パターンや、存在しないファイルは失敗にする。
         type: string
         default: renovate.json
-      versions-file:
-        description: >-
-          RENOVATE_VERSION を定義したシェル スクリプト（.devcontainer/versions.sh など）。渡すと、
-          それを source して得たバージョンで検証する。pre-commit hook と同じバージョンで検証したいときに
-          渡す。渡さないと、このワークフローに書いたバージョンで検証する。
-        type: string
-        default: ''
 
 permissions:
   contents: read
@@ -32,11 +25,10 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     env:
-      # versions-file を渡さないときに使うバージョン。Renovate が更新する。
+      # 検証に使う Renovate のバージョン。Renovate が更新する。
       # renovate: datasource=npm depName=renovate
       RENOVATE_VERSION: 44.155.2
       FILES: ${{ inputs.files }}
-      VERSIONS_FILE: ${{ inputs.versions-file }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -66,17 +58,6 @@ jobs:
       - name: Validate
         run: |
           set -euo pipefail
-          if [ -n "${VERSIONS_FILE}" ]; then
-            # versions-file に RENOVATE_VERSION が無いときに既定のバージョンで黙って通さないよう、
-            # いったん消してから読む。
-            unset RENOVATE_VERSION
-            # shellcheck source=/dev/null
-            source "./${VERSIONS_FILE}"
-            if [ -z "${RENOVATE_VERSION:-}" ]; then
-              echo "::error::${VERSIONS_FILE} does not define RENOVATE_VERSION." >&2
-              exit 1
-            fi
-          fi
           # 一致するファイルが無い glob を、そのままの文字列として validator に渡さないよう nullglob にし、
           # 何にも一致しなかったパターンは失敗にする。
           shopt -s nullglob
