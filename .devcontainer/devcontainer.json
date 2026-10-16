@@ -15,18 +15,12 @@
     },
     "ghcr.io/aetos382/devcontainer-features/shellcheck:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/node:2": {
-      "nodeGypDependencies": false
-    },
     "ghcr.io/devcontainers/features/powershell:2": {}
   },
   "overrideFeatureInstallOrder": [
     "ghcr.io/aetos382/devcontainer-features/apt-mirror"
   ],
   "remoteUser": "vscode",
-  "containerEnv": {
-    "RENOVATE_CONFIG_VALIDATOR_REQUIRED": "true"
-  },
   "onCreateCommand": "bash .devcontainer/on-create.sh",
   "updateContentCommand": "bash .devcontainer/update-content.sh",
   "postCreateCommand": "bash .devcontainer/post-create.sh",
