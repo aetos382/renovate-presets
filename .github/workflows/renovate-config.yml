@@ -1,0 +1,108 @@
+name: Renovate config
+
+# 呼び出し元のリポジトリの Renovate の設定を renovate-config-validator で検証する再利用可能ワークフロー。
+# 設定の誤りは、マージした後に Renovate が設定を読めずに止まるまで気付きにくい。pre-commit hook は
+# --no-verify や GitHub の Web 上での編集で迂回されるので、マージの前にここで止める。
+#
+# 呼び出し元は @main で参照する。preset と同じく、既定のブランチの変更が全リポジトリに即座に効く。
+# gh-actions-lock は job の uses（再利用可能ワークフローの呼び出し）を固定しない（v0.2.0 で確認）ので、
+# タグを打っても固定はできない。このワークフローが使う action は、このリポジトリの actions.lock で固定される。
+
+on:
+  workflow_call:
+    inputs:
+      files:
+        description: >-
+          検証するファイル。空白で区切り、glob も書ける（presets/*.json など）。一致するファイルが無い
+          パターンや、存在しないファイルは失敗にする。
+        type: string
+        default: renovate.json
+      versions-file:
+        description: >-
+          RENOVATE_VERSION を定義したシェル スクリプト（.devcontainer/versions.sh など）。渡すと、
+          それを source して得たバージョンで検証する。pre-commit hook と同じバージョンで検証したいときに
+          渡す。渡さないと、このワークフローに書いたバージョンで検証する。
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      # versions-file を渡さないときに使うバージョン。Renovate が更新する。
+      # renovate: datasource=npm depName=renovate
+      RENOVATE_VERSION: 44.139.0
+      FILES: ${{ inputs.files }}
+      VERSIONS_FILE: ${{ inputs.versions-file }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      # Renovate 44 は Node 24 を要求する（package.json の engines）。
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+      # 設定ファイルは renovate.json に揃え、検証の経路を 1 つにする。他の名前を素通しすると、
+      # 設定の置き場所を移しただけで検証が黙って効かなくなる。
+      # 対象は Renovate が設定ファイルとして探す名前（package.json の renovate キーを除く）。
+      - name: Reject config files with other names
+        run: |
+          set -euo pipefail
+          # git ls-files の出力は、いったん変数に受けて終了コードを確かめる。プロセス置換で読むと
+          # 失敗が捨てられ、他の名前のファイルが無いものとして通してしまう。
+          others="$(git ls-files -- \
+            renovate.jsonc renovate.json5 \
+            .github/renovate.json .github/renovate.jsonc .github/renovate.json5 \
+            .gitlab/renovate.json .gitlab/renovate.jsonc .gitlab/renovate.json5 \
+            .renovaterc .renovaterc.json .renovaterc.jsonc .renovaterc.json5)"
+          if [ -n "${others}" ]; then
+            echo '::error::Use renovate.json for the Renovate config. Found:' >&2
+            printf '%s\n' "${others}" >&2
+            exit 1
+          fi
+      - name: Validate
+        run: |
+          set -euo pipefail
+          if [ -n "${VERSIONS_FILE}" ]; then
+            # versions-file に RENOVATE_VERSION が無いときに既定のバージョンで黙って通さないよう、
+            # いったん消してから読む。
+            unset RENOVATE_VERSION
+            # shellcheck source=/dev/null
+            source "./${VERSIONS_FILE}"
+            if [ -z "${RENOVATE_VERSION:-}" ]; then
+              echo "::error::${VERSIONS_FILE} does not define RENOVATE_VERSION." >&2
+              exit 1
+            fi
+          fi
+          # 一致するファイルが無い glob を、そのままの文字列として validator に渡さないよう nullglob にし、
+          # 何にも一致しなかったパターンは失敗にする。
+          shopt -s nullglob
+          read -ra patterns <<<"${FILES}"
+          files=()
+          for pattern in "${patterns[@]}"; do
+            # glob を展開させるため、引用符で囲まない。
+            # shellcheck disable=SC2206
+            matched=(${pattern})
+            if [ "${#matched[@]}" -eq 0 ]; then
+              echo "::error::${pattern} matches no file." >&2
+              exit 1
+            fi
+            files+=("${matched[@]}")
+          done
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo '::error::No file to validate. Check the files input.' >&2
+            exit 1
+          fi
+          for file in "${files[@]}"; do
+            if [ ! -f "${file}" ]; then
+              echo "::error::${file} does not exist." >&2
+              exit 1
+            fi
+          done
+          printf 'Validating %s with renovate@%s\n' "${files[*]}" "${RENOVATE_VERSION}"
+          # ファイル名を渡すと既定では global config として検証されるので、--no-global を付けて
+          # repo config（preset も同じ形式）として検証させる。
+          npx --yes --package "renovate@${RENOVATE_VERSION}" -- renovate-config-validator --strict --no-global "${files[@]}" < /dev/null

@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  # 他のリポジトリと同じ再利用可能ワークフローで、このリポジトリの renovate.json と preset を検証する。
+  # 同じリポジトリのものを相対パスで呼ぶので、プル リクエストではそのブランチのワークフローが動き、
+  # ワークフロー自体の変更もここで確かめられる。
+  renovate-config:
+    uses: ./.github/workflows/renovate-config.yml
+    with:
+      files: renovate.json presets/*.json
+      # pre-commit hook と同じバージョンで検証する。
+      versions-file: .devcontainer/versions.sh
+
+  # ワークフローと actions.lock のずれや、読めないロックファイルは、ワークフローを見ただけでは
+  # 分からず、pre-commit hook は迂回できるので、ここで止める。
+  actions-lock:
+    runs-on: ubuntu-latest
+    env:
+      # 拡張機能の取得と、--verify が行う GitHub API の呼び出しに使う。
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify actions.lock
+        run: |
+          set -euo pipefail
+          # devcontainer と同じバージョンで検証する。
+          source .devcontainer/versions.sh
+          # Renovate は constraints.ghActionsLock のバージョンで actions.lock を作り直すので、同じ値で
+          # なければならない。preset が両方を更新するが、一致していることは他では検査していない。
+          constraint="$(jq -r '.constraints.ghActionsLock' renovate.json)"
+          if [ "${constraint}" != "${GH_ACTIONS_LOCK_VERSION}" ]; then
+            echo "::error::constraints.ghActionsLock in renovate.json (${constraint}) differs from GH_ACTIONS_LOCK_VERSION in .devcontainer/versions.sh (${GH_ACTIONS_LOCK_VERSION})." >&2
+            exit 1
+          fi
+          gh extension install github/gh-actions-lock --pin "${GH_ACTIONS_LOCK_VERSION}"
+          # 終了コードだけでは判定しない。GitHub API に届かないと、コミットを確かめられなかったことを
+          # warning の finding として出すだけで、終了コード 0 で終わるため。
+          # info の finding（削除済みワークフローの記録など）は許す。v0.2.0 で確認。
+          status=0
+          result="$(gh actions-lock --no-fix --no-interactive --verify --json=valid,findings)" || status=$?
+          printf '%s\n' "${result}"
+          if [ "${status}" -ne 0 ]; then
+            exit "${status}"
+          fi
+          if ! jq -e '.valid == true and all(.findings[]; .severity == "info")' <<<"${result}" >/dev/null; then
+            echo "::error::gh actions-lock reported findings, or could not verify the pinned commits." >&2
+            exit 1
+          fi
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      # ShellCheck はランナーに最初から入っているものを使い、devcontainer（shellcheck feature）と
+      # バージョンを揃えない。バージョンが違っても変わるのは指摘の有無だけなので、ランナーの更新で
+      # 新しい指摘が出たらその時に直す。
+      - name: Run ShellCheck
+        run: |
+          set -euo pipefail
+          mapfile -d '' -t files < <(git ls-files -z '*.sh')
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "::error::No shell script matched the pathspec. The file selection is broken." >&2
+            exit 1
+          fi
+          printf 'Checking %s\n' "${files[@]}"
+          shellcheck -- "${files[@]}"
+
+  # main の ruleset で必須にするステータス チェックは、このジョブだけにする。ジョブを足すたびに
+  # ruleset を直さずに済むよう、他のジョブの結果をここに集約する。
+  # ジョブを足したら needs にも足す。足し忘れると、そのジョブは失敗してもマージを止めない。
+  ci-passed:
+    # 依存するジョブが失敗すると、既定ではこのジョブは skipped になる。skipped は必須チェックを
+    # 通ってしまうので、always() で必ず実行して、ここで失敗させる。
+    if: always()
+    needs: [renovate-config, actions-lock, shellcheck]
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Check the results of all jobs
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+          jq -r 'to_entries[] | "\(.key): \(.value.result)"' <<<"${NEEDS}"
+          if ! jq -e 'all(.[]; .result == "success")' <<<"${NEEDS}" >/dev/null; then
+            echo "::error::Not all jobs succeeded." >&2
+            exit 1
+          fi

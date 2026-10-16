@@ -90,14 +90,35 @@ Renovate は、preset の `packageRules` の後にリポジトリ側の `package
 
 リポジトリ側で automerge を有効にするルールには、必ず `matchUpdateTypes` を指定する。preset 同士でも、`extends` で後に書いた preset のルールが後に並ぶので、このリポジトリの preset に automerge のルールを足すときも同じようにする。
 
+## Renovate の設定を CI で検証する
+
+[.github/workflows/renovate-config.yml](.github/workflows/renovate-config.yml) は、呼び出し元のリポジトリの Renovate の設定を `renovate-config-validator --strict --no-global` で検証する再利用可能ワークフローである。設定の誤りは、マージした後に Renovate が設定を読めずに止まるまで気付きにくいので、プル リクエストの CI から呼ぶ。
+
+```yaml
+jobs:
+  renovate-config:
+    uses: aetos382/renovate-presets/.github/workflows/renovate-config.yml@main
+    with:
+      # pre-commit hook と同じバージョンで検証したいときに渡す。
+      versions-file: .devcontainer/versions.sh
+```
+
+- `files`: 検証するファイル。空白で区切り、glob も書ける。既定は `renovate.json`。一致するファイルが無いパターンは失敗になる。
+- `versions-file`: `RENOVATE_VERSION` を定義したシェル スクリプト。渡すと、それを source して得たバージョンの Renovate で検証する。渡さないと、ワークフローに書いてあるバージョン（Renovate が更新する）で検証する。
+
+`renovate.json` 以外の名前の設定ファイル（`.github/renovate.json`、`.renovaterc` など）がリポジトリにあると失敗する。設定ファイルを `renovate.json` に揃えて、検証の経路を 1 つにするためである。
+
+preset と同じく、`@main` で参照する。gh-actions-lock は job の `uses`（再利用可能ワークフローの呼び出し）を固定しない（v0.2.0 で確認）ので、タグを打っても呼び出し元の `actions.lock` では固定できない。ワークフローが使う action は、このリポジトリの `actions.lock` で固定している。
+
 ## 導入時に必要な作業
 
 - Renovate の GitHub App をリポジトリにインストールする。
 - Dependabot alerts を有効にする。
+- CI から、上の再利用可能ワークフローを呼ぶ。
 
 ## このリポジトリの開発
 
-コミット時に動く pre-commit フック（main への直接コミットの防止と、Renovate の設定の検証）は、Git 2.54 で導入された Config-based hooks として `.gitconfig` に定義している。devcontainer では `.devcontainer/on-create.sh` が `.git/config` に `include.path=../.gitconfig` を追加し、フックが有効になったことを確かめる。devcontainer の外では `git config set --append --local include.path ../.gitconfig` を手で実行する。
+コミット時に動く pre-commit フック（main への直接コミットの防止、Renovate の設定の検証、ワークフローと `actions.lock` の対応の検証）は、Git 2.54 で導入された Config-based hooks として `.gitconfig` に定義している。devcontainer では `.devcontainer/on-create.sh` が `.git/config` に `include.path=../.gitconfig` を追加し、フックが有効になったことを確かめる。devcontainer の外では `git config set --append --local include.path ../.gitconfig` を手で実行する。
 
 次の場合にはフックが動かない。コミット時に警告は出ない（devcontainer では、1 つめは `on-create.sh` が作成時に検出する）。
 
