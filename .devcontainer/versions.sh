@@ -3,7 +3,7 @@
 # shellcheck disable=SC2034
 
 # renovate: datasource=npm depName=renovate
-RENOVATE_VERSION='44.139.0'
+RENOVATE_VERSION='44.155.2'
 
 # gh の拡張機能 gh-actions-lock。renovate.json の constraints.ghActionsLock と同じ値にする。
 # Renovate が actions.lock を作り直すときのバージョンを、手元や CI と揃えるため。
