@@ -101,7 +101,8 @@ jobs:
 ```
 
 - `files`: 検証するファイル。空白で区切り、glob も書ける。既定は `renovate.json`。一致するファイルが無いパターンは失敗になる。
-- `versions-file`: `RENOVATE_VERSION` を定義したシェル スクリプト。渡すと、それを source して得たバージョンの Renovate で検証する。渡さないと、ワークフローに書いてあるバージョン（Renovate が更新する）で検証する。
+
+検証に使う Renovate のバージョンは、ワークフローに書いてあるもの（このリポジトリの Renovate が更新する）である。
 
 `renovate.json` 以外の名前の設定ファイル（`.github/renovate.json`、`.renovaterc` など）がリポジトリにあると失敗する。設定ファイルを `renovate.json` に揃えて、検証の経路を 1 つにするためである。
 
@@ -115,7 +116,7 @@ preset と同じく、`@main` で参照する。gh-actions-lock は job の `use
 
 ## このリポジトリの開発
 
-コミット時に動く pre-commit フック（main への直接コミットの防止、Renovate の設定の検証、ワークフローと `actions.lock` の対応の検証）は、Git 2.54 で導入された Config-based hooks として `.gitconfig` に定義している。devcontainer では `.devcontainer/on-create.sh` が `.git/config` に `include.path=../.gitconfig` を追加し、フックが有効になったことを確かめる。devcontainer の外では `git config set --append --local include.path ../.gitconfig` を手で実行する。
+コミット時に動く pre-commit フック（main への直接コミットの防止、ワークフローと `actions.lock` の対応の検証）は、Git 2.54 で導入された Config-based hooks として `.gitconfig` に定義している。devcontainer では `.devcontainer/on-create.sh` が `.git/config` に `include.path=../.gitconfig` を追加し、フックが有効になったことを確かめる。devcontainer の外では `git config set --append --local include.path ../.gitconfig` を手で実行する。
 
 次の場合にはフックが動かない。コミット時に警告は出ない（devcontainer では、1 つめは `on-create.sh` が作成時に検出する）。
 
