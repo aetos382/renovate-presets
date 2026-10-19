@@ -27,7 +27,7 @@ jobs:
     env:
       # 検証に使う Renovate のバージョン。Renovate が更新する。
       # renovate: datasource=npm depName=renovate
-      RENOVATE_VERSION: 44.155.8
+      RENOVATE_VERSION: 44.164.7
       FILES: ${{ inputs.files }}
     steps:
       - uses: actions/checkout@v7.0.1
