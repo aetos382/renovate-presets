@@ -36,7 +36,7 @@ jobs:
       # Renovate 44 は Node 24 を要求する（package.json の engines）。
       - uses: actions/setup-node@v7.1.0
         with:
-          node-version: 24
+          node-version: 26
       # 設定ファイルは renovate.json に揃え、検証の経路を 1 つにする。他の名前を素通しすると、
       # 設定の置き場所を移しただけで検証が黙って効かなくなる。
       # 対象は Renovate が設定ファイルとして探す名前（package.json の renovate キーを除く）。
